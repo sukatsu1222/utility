@@ -18,8 +18,9 @@ fi
 # ls Aliases
 #
 
-alias ll='ls -lh'         # long format and human-readable sizes
-alias l='ll -A'           # long format, all files
+alias la='ls -A'          # all files
+alias ll='ls -Fhl'        # long format and human-readable sizes
+alias l='ls -AFhl'           # long format, all files
 alias lm="l | ${PAGER}"   # long format, all files, use pager
 alias lr='ll -R'          # long format, recursive
 alias lk='ll -Sr'         # long format, largest file size last
@@ -50,7 +51,6 @@ fi
 alias df='df -h'
 alias du='du -h'
 
-
 #
 # Colours
 #
@@ -64,6 +64,8 @@ if (( terminfo[colors] >= 8 )); then
     if (( ${+commands[ggrep]} )) alias grep='ggrep --color=auto'
   else
     alias grep='grep --color=auto'
+    alias fgrep='fgrep --color=auto'
+    alias egrep='egrep --color=auto'
   fi
 
   # less colours
