@@ -56,7 +56,6 @@ alias du='du -h'
 #
 
 if (( terminfo[colors] >= 8 )); then
-  echo "terminfo[colors] >= 8"
   # grep colours
   if (( ! ${+GREP_COLOR} )) export GREP_COLOR='37;45'               #BSD
   if (( ! ${+GREP_COLORS} )) export GREP_COLORS="mt=${GREP_COLOR}"  #GNU
