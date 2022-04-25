@@ -6,6 +6,8 @@
 if (( ! ${+PAGER} )); then
   if (( ${+commands[less]} )); then
     export PAGER=less
+    export LESS='-R -i -M -X -F'
+    export LESSCHARSET='utf-8'
   else
     export PAGER=more
   fi
@@ -54,6 +56,7 @@ alias du='du -h'
 #
 
 if (( terminfo[colors] >= 8 )); then
+  echo "terminfo[colors] >= 8"
   # grep colours
   if (( ! ${+GREP_COLOR} )) export GREP_COLOR='37;45'               #BSD
   if (( ! ${+GREP_COLORS} )) export GREP_COLORS="mt=${GREP_COLOR}"  #GNU
@@ -65,13 +68,13 @@ if (( terminfo[colors] >= 8 )); then
 
   # less colours
   if (( ${+commands[less]} )); then
-    if (( ! ${+LESS_TERMCAP_mb} )) export LESS_TERMCAP_mb=$'\E[1;31m'   # Begins blinking.
-    if (( ! ${+LESS_TERMCAP_md} )) export LESS_TERMCAP_md=$'\E[1;31m'   # Begins bold.
-    if (( ! ${+LESS_TERMCAP_me} )) export LESS_TERMCAP_me=$'\E[0m'      # Ends mode.
-    if (( ! ${+LESS_TERMCAP_se} )) export LESS_TERMCAP_se=$'\E[27m'     # Ends standout-mode.
-    if (( ! ${+LESS_TERMCAP_so} )) export LESS_TERMCAP_so=$'\E[7m'      # Begins standout-mode.
-    if (( ! ${+LESS_TERMCAP_ue} )) export LESS_TERMCAP_ue=$'\E[0m'      # Ends underline.
-    if (( ! ${+LESS_TERMCAP_us} )) export LESS_TERMCAP_us=$'\E[1;32m'   # Begins underline.
+    if (( ! ${+LESS_TERMCAP_mb} )) export LESS_TERMCAP_mb=$(tput bold; tput setaf 1)    # Start blinking
+    if (( ! ${+LESS_TERMCAP_md} )) export LESS_TERMCAP_md=$(tput bold; tput setaf 5)    # Start bold mode
+    if (( ! ${+LESS_TERMCAP_me} )) export LESS_TERMCAP_me=$(tput sgr0)                  # End all mode like so, us, mb, md, and mr
+    if (( ! ${+LESS_TERMCAP_se} )) export LESS_TERMCAP_se=$(tput rmso; tput sgr0)       # End standout mode
+    if (( ! ${+LESS_TERMCAP_so} )) export LESS_TERMCAP_so=$(tput setab 7; tput setaf 0) # Start standout mode
+    if (( ! ${+LESS_TERMCAP_ue} )) export LESS_TERMCAP_ue=$(tput rmul; tput sgr0)       # End underlining
+    if (( ! ${+LESS_TERMCAP_us} )) export LESS_TERMCAP_us=$(tput setaf 2)               # Start underlining
   fi
 else
   # See https://no-color.org
@@ -91,12 +94,12 @@ if whence dircolors >/dev/null && ls --version &>/dev/null; then
 
   if (( ! ${+NO_COLOR} )); then
     # ls colours
-    if [[ -s ${HOME}/.dir_colors ]]; then
-      eval "$(dircolors --sh ${HOME}/.dir_colors)"
+    if [[ -s ${HOME}/.dircolors ]]; then
+      eval "$(dircolors --sh ${HOME}/.dircolors)"
     elif (( ! ${+LS_COLORS} )); then
       export LS_COLORS='di=1;34:ln=35:so=32:pi=33:ex=31:bd=1;36:cd=1;33:su=30;41:sg=30;46:tw=30;42:ow=30;43'
     fi
-    alias ls='ls --group-directories-first --color=auto'
+    alias ls='ls --group-directories-first --color=auto -X'
   fi
 
   # Always wear a condom
