@@ -6,27 +6,14 @@
 if (( ! ${+PAGER} )); then
   if (( ${+commands[less]} )); then
     export PAGER=less
-    export LESS='-R -i -M -X -F'
-    export LESSCHARSET='utf-8'
   else
     export PAGER=more
   fi
 fi
 
-
-#
-# ls Aliases
-#
-
-alias la='ls -A'          # all files
-alias ll='ls -Fhl'        # long format and human-readable sizes
-alias l='ls -AFhl'           # long format, all files
-alias lm="l | ${PAGER}"   # long format, all files, use pager
-alias lr='ll -R'          # long format, recursive
-alias lk='ll -Sr'         # long format, largest file size last
-alias lt='ll -tr'         # long format, newest modification time last
-alias lc='lt -c'          # long format, newest status change (ctime) last
-
+if (( ! ${+LESS} )); then
+  export LESS='--ignore-case --jump-target=4 --LONG-PROMPT --no-init --quit-if-one-screen --RAW-CONTROL-CHARS'
+fi
 
 #
 # File Downloads
@@ -55,52 +42,48 @@ alias du='du -h'
 # Colours
 #
 
-if (( terminfo[colors] >= 8 )); then
+# See https://no-color.org
+if [[ -z ${NO_COLOR} ]]; then
+
   # grep colours
   if (( ! ${+GREP_COLOR} )) export GREP_COLOR='37;45'               #BSD
   if (( ! ${+GREP_COLORS} )) export GREP_COLORS="mt=${GREP_COLOR}"  #GNU
-  if [[ ${OSTYPE} == openbsd* ]]; then
+  if [[ ${OSTYPE} == (openbsd|solaris)* ]]; then
     if (( ${+commands[ggrep]} )) alias grep='ggrep --color=auto'
-  else
+  elif (( ${+commands[grep]} )); then
     alias grep='grep --color=auto'
-    alias fgrep='fgrep --color=auto'
-    alias egrep='egrep --color=auto'
   fi
 
   # less colours
-  if (( ${+commands[less]} )); then
-    if (( ! ${+LESS_TERMCAP_mb} )) export LESS_TERMCAP_mb=$(tput bold; tput setaf 1)    # Start blinking
-    if (( ! ${+LESS_TERMCAP_md} )) export LESS_TERMCAP_md=$(tput bold; tput setaf 5)    # Start bold mode
-    if (( ! ${+LESS_TERMCAP_me} )) export LESS_TERMCAP_me=$(tput sgr0)                  # End all mode like so, us, mb, md, and mr
-    if (( ! ${+LESS_TERMCAP_se} )) export LESS_TERMCAP_se=$(tput rmso; tput sgr0)       # End standout mode
-    if (( ! ${+LESS_TERMCAP_so} )) export LESS_TERMCAP_so=$(tput setab 7; tput setaf 0) # Start standout mode
-    if (( ! ${+LESS_TERMCAP_ue} )) export LESS_TERMCAP_ue=$(tput rmul; tput sgr0)       # End underlining
-    if (( ! ${+LESS_TERMCAP_us} )) export LESS_TERMCAP_us=$(tput setaf 2)               # Start underlining
-  fi
-else
-  # See https://no-color.org
-  export NO_COLOR=1
+  if (( ! ${+LESS_TERMCAP_mb} )) export LESS_TERMCAP_mb=$(tput bold; tput setaf 1)    # Start blinking
+  if (( ! ${+LESS_TERMCAP_md} )) export LESS_TERMCAP_md=$(tput bold; tput setaf 5)    # Start bold mode
+  if (( ! ${+LESS_TERMCAP_me} )) export LESS_TERMCAP_me=$(tput sgr0)                  # End all mode like so, us, mb, md, and mr
+  if (( ! ${+LESS_TERMCAP_se} )) export LESS_TERMCAP_se=$(tput rmso; tput sgr0)       # End standout mode
+  if (( ! ${+LESS_TERMCAP_so} )) export LESS_TERMCAP_so=$(tput setab 7; tput setaf 0) # Start standout mode
+  if (( ! ${+LESS_TERMCAP_ue} )) export LESS_TERMCAP_ue=$(tput rmul; tput sgr0)       # End underlining
+  if (( ! ${+LESS_TERMCAP_us} )) export LESS_TERMCAP_us=$(tput setaf 2)               # Start underlining
 fi
 
 
 #
-# GNU vs. BSD
+# ls GNU vs. BSD
 #
 
 if whence dircolors >/dev/null && ls --version &>/dev/null; then
   # GNU
 
-  # ls aliases
-  alias lx='ll -X' # long format, sort by extension
-
-  if (( ! ${+NO_COLOR} )); then
+  if [[ -z ${NO_COLOR} ]]; then
     # ls colours
-    if [[ -s ${HOME}/.dircolors ]]; then
+    if [[ -s ${HOME}/.dir_colors ]]; then
+      eval "$(dircolors --sh ${HOME}/.dir_colors)"
+    elif [[ -s ${HOME}/.dircolors ]]; then
       eval "$(dircolors --sh ${HOME}/.dircolors)"
     elif (( ! ${+LS_COLORS} )); then
       export LS_COLORS='di=1;34:ln=35:so=32:pi=33:ex=31:bd=1;36:cd=1;33:su=30;41:sg=30;46:tw=30;42:ow=30;43'
     fi
     alias ls='ls --group-directories-first --color=auto -X'
+  else
+    alias ls='ls --group-directories-first'
   fi
 
   # Always wear a condom
@@ -109,20 +92,42 @@ if whence dircolors >/dev/null && ls --version &>/dev/null; then
 else
   # BSD
 
-  if (( ! ${+NO_COLOR} )); then
+  if [[ -z ${NO_COLOR} ]]; then
     # ls colours
-    if (( ! ${+CLICOLOR} )) export CLICOLOR=1
-    if (( ! ${+LSCOLORS} )) export LSCOLORS='ExfxcxdxbxGxDxabagacad'
+    export CLICOLOR=1
+    if (( ! ${+LSCOLORS} )) export LSCOLORS=ExfxcxdxbxGxDxabagacad
     # Stock OpenBSD ls does not support colors at all, but colorls does.
     if [[ ${OSTYPE} == openbsd* && ${+commands[colorls]} -ne 0 ]]; then
-      alias ls='colorls'
+      alias ls=colorls
     fi
   fi
+fi
+
+
+#
+# ls Aliases
+#
+
+
+alias la='ls -A'          # all files
+alias ll='ls -Fhl'        # long format and human-readable sizes
+alias l='ls -AFhl'           # long format, all files
+alias lm="l | ${PAGER}"   # long format, all files, use pager
+alias lr='ll -R'          # long format, recursive
+alias lk='ll -Sr'         # long format, largest file size last
+alias lt='ll -tr'         # long format, newest modification time last
+if (( ${+commands[lsd]} )); then
+  alias ls=lsd
+  alias lr='ll --tree'    # long format, recursive as a tree
+  alias lx='ll -X'        # long format, sort by extension
+else
+  alias lr="ll -R | ${PAGER}"        # long format, recursive
+  alias lc='lt -c'        # long format, newest status change (ctime) last, not supported by lsd
 fi
 
 
 # not aliasing rm -i, but if safe-rm is available, use condom.
 # if safe-rmdir is available, the OS is suse which has its own terrible 'safe-rm' which is not what we want
 if (( ${+commands[safe-rm]} && ! ${+commands[safe-rmdir]} )); then
-  alias rm='safe-rm'
+  alias rm=safe-rm
 fi
